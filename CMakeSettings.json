@@ -17,7 +17,7 @@
           "type": "STRING"
         }
       ],
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "Windows-x64-Debug",
@@ -36,7 +36,7 @@
           "type": "STRING"
         }
       ],
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "Windows-x86-Release",
@@ -55,7 +55,7 @@
           "type": "STRING"
         }
       ],
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "Windows-x86-Debug",
@@ -74,7 +74,7 @@
           "type": "STRING"
         }
       ],
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "Linux-x64-Release",
@@ -186,7 +186,7 @@
           "type": "STRING"
         }
       ],
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake"
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake"
     },
     {
       "name": "Windows-x64-ExperimentalDebug",
@@ -197,7 +197,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "inheritEnvironments": [ "msvc_x64_x64" ],
       "variables": [
         {
@@ -221,7 +221,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "inheritEnvironments": [ "msvc_x86" ],
       "variables": [
         {
@@ -245,7 +245,7 @@
       "cmakeCommandArgs": "",
       "buildCommandArgs": "-v",
       "ctestCommandArgs": "",
-      "cmakeToolchain": "../vcpkg/scripts/buildsystems/vcpkg.cmake",
+      "cmakeToolchain": "D:/development/env/vcpkg/scripts/buildsystems/vcpkg.cmake",
       "inheritEnvironments": [ "msvc_x86" ],
       "variables": [
         {

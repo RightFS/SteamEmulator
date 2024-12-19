@@ -1,46 +1,21 @@
 # Based on: https://github.com/ttroy50/cmake-examples/blob/master/03-code-generation/protobuf/CMakeLists.txt
-cmake_minimum_required(VERSION 3.6)
-
+cmake_minimum_required(VERSION 3.16)
+# for msvc runtime config
+if (POLICY CMP0091)
+    cmake_policy(SET CMP0091 NEW)
+endif (POLICY CMP0091)
 # Set the project name
 project(goldberg_emulator)
-
-if(MSVC)
-  # Set static environment (results in static compile flags) if Visual Studio is used (dynamic by default)
-	# Officially recommended solution: https://gitlab.kitware.com/cmake/community/wikis/FAQ#how-can-i-build-my-msvc-application-with-a-static-runtime
-	# Should be replaced by a better solution in the future: https://gitlab.kitware.com/cmake/cmake/merge_requests/3211
-	foreach(flag_var
-		CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE
-		CMAKE_CXX_FLAGS_MINSIZEREL CMAKE_CXX_FLAGS_RELWITHDEBINFO)
-		if(${flag_var} MATCHES "/MD")
-		  string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-		endif(${flag_var} MATCHES "/MD")
-	endforeach(flag_var)
-
-	# Disable MSVC++ warning C4996: 'may be unsafe/disable deprecation'
-	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
-endif()
 
 # Add option to enable experimental build
 option(EMU_EXPERIMENTAL_BUILD "Enable experimental build" OFF)
 
 # Set CXX standard
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
+# set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find the protobuf compiler and libraries
-include(FindProtobuf)
-find_package(Protobuf 3.1.0 REQUIRED)
-
-# Generate the .h and .cxx files for dll/net.proto
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS dll/net.proto)
-
-# Print path to generated files
-message(STATUS "PROTO_SRCS = ${PROTO_SRCS}")
-message(STATUS "PROTO_HDRS = ${PROTO_HDRS}")
-message(STATUS "PROTOBUF_INCLUDE_DIRS = ${PROTOBUF_INCLUDE_DIRS}")
-message(STATUS "PROTOBUF_LIBRARIES = ${PROTOBUF_LIBRARIES}")
-message(STATUS "PROTOBUF_PROTOC_EXECUTABLE = ${PROTOBUF_PROTOC_EXECUTABLE}")
+add_subdirectory(proto)
 
 # Setup the lib/exe names for the targets
 if(WIN32)
@@ -107,14 +82,11 @@ add_library(${LIB_STEAM_API}
 	$<$<BOOL:${EMU_EXPERIMENTAL_BUILD}>:${DETOURS_SRC_SHARED}>
 	$<$<AND:$<BOOL:${EMU_EXPERIMENTAL_BUILD}>,$<BOOL:${EMU_OVERLAY}>>:${OVERLAY_EXPERIMENTAL_SRC_SHARED}>
   ${DLL_SRC_SHARED}
-  ${PROTO_SRCS}
-  ${PROTO_HDRS}
 )
 
 # Include the required directories
 target_include_directories(${LIB_STEAM_API}
   PRIVATE
-  ${PROTOBUF_INCLUDE_DIRS}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/ImGui
   ${CMAKE_CURRENT_SOURCE_DIR}/glew/include
@@ -122,8 +94,8 @@ target_include_directories(${LIB_STEAM_API}
 
 # Link the required libraries
 target_link_libraries(${LIB_STEAM_API}
-	PRIVATE
-	protobuf::libprotobuf
+	PUBLIC
+	proto
 	$<$<BOOL:${WIN32}>:ws2_32>
 	$<$<BOOL:${WIN32}>:iphlpapi>
 	$<$<AND:$<BOOL:${WIN32}>,$<BOOL:${EMU_EXPERIMENTAL_BUILD}>,$<BOOL:${EMU_OVERLAY}>>:opengl32.lib>
@@ -134,7 +106,7 @@ target_link_libraries(${LIB_STEAM_API}
 target_compile_definitions(${LIB_STEAM_API}
 	PRIVATE
 	$<$<CONFIG:>:EMU_RELEASE_BUILD>
-  $<$<CONFIG:Release>:EMU_RELEASE_BUILD>
+	$<$<CONFIG:Release>:EMU_RELEASE_BUILD>
 	$<$<CONFIG:RelWithDebInfo>:EMU_RELEASE_BUILD>
 	$<$<CONFIG:MinSizeRel>:EMU_RELEASE_BUILD>
 	$<$<BOOL:${EMU_EXPERIMENTAL_BUILD}>:EMU_EXPERIMENTAL_BUILD>
@@ -164,7 +136,6 @@ add_library(${LIB_STEAMCLIENT}
 	SHARED
 	steamclient.cpp
 )
-
 # Add target compile definitions
 target_compile_definitions(${LIB_STEAMCLIENT}
 	PRIVATE
@@ -202,7 +173,14 @@ add_library(${LIB_STEAMNETWORKINGSOCKETS}
 	SHARED
 	steamnetworkingsockets.cpp
 )
+if (MSVC)
+    set_property(TARGET ${LIB_STEAMCLIENT} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET ${LIB_STEAMNETWORKINGSOCKETS} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    set_property(TARGET ${LIB_STEAM_API} PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8 /wd4100")
+	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
+endif (MSVC)
 # Add target compile definitions
 target_compile_definitions(${LIB_STEAMNETWORKINGSOCKETS}
 	PRIVATE
@@ -240,20 +218,17 @@ add_executable(${BIN_LOBBY_CONNECT}
 	lobby_connect.cpp
 	$<$<BOOL:${EMU_EXPERIMENTAL_BUILD}>:${DETOURS_SRC_SHARED}>
 	${DLL_SRC_SHARED}
-	${PROTO_SRCS}
-	${PROTO_HDRS}
 )
 
 target_include_directories(${BIN_LOBBY_CONNECT}
 	PRIVATE
-	${PROTOBUF_INCLUDE_DIRS}
 	${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Link the required libraries
 target_link_libraries(${BIN_LOBBY_CONNECT}
 	PRIVATE
-	protobuf::libprotobuf
+	proto
 	$<$<BOOL:${WIN32}>:ws2_32>
 	$<$<BOOL:${WIN32}>:iphlpapi>
 	$<$<BOOL:${WIN32}>:comdlg32>
@@ -267,7 +242,7 @@ target_compile_definitions(${BIN_LOBBY_CONNECT}
 	NO_DISK_WRITES
 	LOBBY_CONNECT
 	$<$<CONFIG:>:EMU_RELEASE_BUILD>
-  $<$<CONFIG:Release>:EMU_RELEASE_BUILD>
+	$<$<CONFIG:Release>:EMU_RELEASE_BUILD>
 	$<$<CONFIG:RelWithDebInfo>:EMU_RELEASE_BUILD>
 	$<$<CONFIG:MinSizeRel>:EMU_RELEASE_BUILD>
 	$<$<BOOL:${EMU_EXPERIMENTAL_BUILD}>:EMU_EXPERIMENTAL_BUILD>
